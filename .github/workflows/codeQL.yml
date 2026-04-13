@@ -1,0 +1,52 @@
+name: "CodeQL - fingerprintio-java"
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 0' # chaque dimanche à 03:00
+
+jobs:
+  analyze:
+    name: Analyze fingerprintio-java (CodeQL)
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ java ]
+
+    steps:
+      # 📥 Checkout du repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ☕ Setup Java (important pour build stable)
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 🧠 Initialisation CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      # 🏗️ Build Maven (fingerprintio est un projet Maven)
+      - name: Build project
+        run: mvn -B clean compile --no-transfer-progress
+
+      # 🛡️ Analyse CodeQL
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
